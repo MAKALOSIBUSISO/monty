@@ -1,111 +1,67 @@
 #include "monty.h"
+#include <string.h>
+
+void free_stack(stack_t **stack);
+int init_stack(stack_t **stack);
+int check_mode(stack_t *stack);
+
 /**
- * _push - push int to a stack
- * @stack: linked lists for monty stack
- * @line_number: number of line opcode occurs on
+ * free_stack - Frees a stack_t stack.
+ * @stack: A pointer to the top (stack) or
+ *         bottom (queue) of a stack_t.
  */
-void _push(stack_t **stack, unsigned int line_number)
+void free_stack(stack_t **stack)
 {
-	stack_t *new;
-	char *arg;
-	int push_arg;
+	stack_t *tmp = *stack;
 
-	push_arg = 0;
-	new = malloc(sizeof(stack_t));
-	if (!new)
+	while (*stack)
 	{
-		printf("Error: malloc failed\n");
-		error_exit(stack);
-	}
-
-	arg = strtok(NULL, "\n ");
-	if (isnumber(arg) == 1 && arg != NULL)
-	{
-		push_arg = atoi(arg);
-	}
-	else
-	{
-		printf("L%d: usage: push integer\n", line_number);
-		error_exit(stack);
-	}
-
-	if (sq_flag == 1)
-	{
-		add_dnodeint_end(stack, push_arg);
-	}
-
-	if (sq_flag == 0)
-	{
-		add_dnodeint(stack, push_arg);
-	}
-
-}
-/**
- * _pall - print all function
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
- */
-void _pall(stack_t **stack, __attribute__ ((unused))unsigned int line_number)
-{
-	stack_t *runner;
-
-	runner = *stack;
-	while (runner != NULL)
-	{
-		printf("%d\n", runner->n);
-		runner = runner->next;
+		tmp = (*stack)->next;
+		free(*stack);
+		*stack = tmp;
 	}
 }
+
 /**
- * _pint - print int a top of stack
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * init_stack - Initializes a stack_t stack with beginning
+ *              stack and ending queue nodes.
+ * @stack: A pointer to an unitialized stack_t stack.
  *
+ * Return: If an error occurs - EXIT_FAILURE.
+ *         Otherwise - EXIT_SUCCESS.
  */
-void _pint(stack_t **stack, unsigned int line_number)
-{
-	stack_t *runner;
 
-	runner = *stack;
-	if (runner == NULL)
-	{
-		printf("L%d: can't pint, stack empty\n", line_number);
-		error_exit(stack);
-	}
-	printf("%d\n", runner->n);
+int init_stack(stack_t **stack)
+{
+	stack_t *s;
+
+	s = malloc(sizeof(stack_t));
+	if (s == NULL)
+		return (malloc_error());
+
+	s->n = STACK;
+	s->prev = NULL;
+	s->next = NULL;
+
+	*stack = s;
+
+	return (EXIT_SUCCESS);
 }
+
 /**
- * _swap - swap top of stack and second top of stack
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * check_mode - Checks if a stack_t linked list is in stack or queue mode.
+ * @stack: A pointer to the top (stack) or bottom (queue)
+ *         of a stack_t linked list.
  *
+ * Return: If the stack_t is in stack mode - STACK (0).
+ *         If the stack_t is in queue mode - QUEUE (1).
+ *         Otherwise - 2.
  */
-void _swap(stack_t **stack, unsigned int line_number)
+int check_mode(stack_t *stack)
 {
-	stack_t *runner;
-	int tmp;
-
-	runner = *stack;
-	if (runner == NULL || runner->next == NULL)
-	{
-		printf("L%d: can't swap, stack too short\n", line_number);
-		error_exit(stack);
-	}
-	tmp = runner->n;
-	runner->n = runner->next->n;
-	runner->next->n = tmp;
-}
-/**
- * _pop - delete item at top of stack
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
- */
-void _pop(stack_t **stack, unsigned int line_number)
-{
-	if (*stack == NULL)
-	{
-		printf("L%d: can't pop an empty stack\n", line_number);
-		error_exit(stack);
-	}
-	delete_dnodeint_at_index(stack, 0);
+	if (stack->n == STACK)
+		return (STACK);
+	else if (stack->n == QUEUE)
+		return (QUEUE);
+	return (2);
 }

@@ -1,94 +1,97 @@
-#include "monty.h"
+#include <stdlib.h>
+
+char *get_int(int num);
+unsigned int _abs(int);
+int get_numbase_len(unsigned int num, unsigned int base);
+void fill_numbase_buff(unsigned int num, unsigned int base,
+		       char *buff, int buff_size);
+
 /**
- * _add - adds top of stack and second top of stack
+ * get_int - gets a character pointer to new string containing int
+ * @num: number to convert to string
  *
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * Return: character pointer to newly created string. NULL if malloc fails.
  */
-void _add(stack_t **stack, unsigned int line_number)
+
+char *get_int(int num)
 {
-	if (*stack == NULL || (*stack)->next == NULL)
-	{
-		printf("L%d: can't add, stack too short\n", line_number);
-		error_exit(stack);
-	}
-	(*stack)->next->n += (*stack)->n;
-	_pop(stack, line_number);
+	unsigned int temp;
+	int length = 0;
+	long num_l = 0;
+	char *ret;
+
+	temp = _abs(num);
+	length = get_numbase_len(temp, 10);
+
+	if (num < 0 || num_l < 0)
+		length++; /* negative sign */
+	ret = malloc(length + 1); /* create new string */
+	if (!ret)
+		return (NULL);
+
+	fill_numbase_buff(temp, 10, ret, length);
+	if (num < 0 || num_l < 0)
+		ret[0] = '-';
+
+	return (ret);
 }
 
 /**
- * _sub - subtracts top of stack and second top of stack
+ * _abs - gets the absolute value of an integer
+ * @i: integer to get absolute value of
  *
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * Return: unsigned integer abs rep of i
  */
-void _sub(stack_t **stack, unsigned int line_number)
+
+unsigned int _abs(int i)
 {
-	if (*stack == NULL || (*stack)->next == NULL)
-	{
-		printf("L%d: can't sub, stack too short\n", line_number);
-		error_exit(stack);
-	}
-	(*stack)->next->n -= (*stack)->n;
-	_pop(stack, line_number);
+	if (i < 0)
+		return (-(unsigned int)i);
+	return ((unsigned int)i);
 }
 
 /**
- * _mul - multiply top of stack and second top of stack
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * get_numbase_len - gets length of buffer needed for an unsigned int
+ * @num: number to get length needed for
+ * @base: base of number representation used by buffer
  *
+ * Return: integer containing length of buffer needed (doesn't contain null bt)
  */
-void _mul(stack_t **stack, unsigned int line_number)
+int get_numbase_len(unsigned int num, unsigned int base)
 {
-	if (*stack == NULL || (*stack)->next == NULL)
+	int len = 1; /* all numbers contain atleast one digit */
+
+	while (num > base - 1)
 	{
-		printf("L%d: can't mul, stack too short\n", line_number);
-		error_exit(stack);
+		len++;
+		num /= base;
 	}
-	(*stack)->next->n *= (*stack)->n;
-	_pop(stack, line_number);
+	return (len);
 }
 
 /**
- * _div - divide top of stack and second top of stack
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
- */
-void _div(stack_t **stack, unsigned int line_number)
-{
-	if (*stack == NULL || (*stack)->next == NULL)
-	{
-		printf("L%d: can't div, stack too short\n", line_number);
-		error_exit(stack);
-	}
-	if ((*stack)->n == 0)
-	{
-		printf("L%d: division by zero\n", line_number);
-		error_exit(stack);
-	}
-	(*stack)->next->n /= (*stack)->n;
-	_pop(stack, line_number);
-}
-
-/**
- * _mod - mod top of stack and second top of stack
- * @stack: pointer to linked list stack
- * @line_number: number of line opcode occurs on
+ * fill_numbase_buff - fills buffer with correct numbers up to base 36
+ * @num: number to convert to string given base
+ * @base: base of number used in conversion, only works up to base 36
+ * @buff: buffer to fill with result of conversion
+ * @buff_size: size of buffer in bytes
  *
+ * Return: always void.
  */
-void _mod(stack_t **stack, unsigned int line_number)
+void fill_numbase_buff(unsigned int num, unsigned int base,
+			char *buff, int buff_size)
 {
-	if (*stack == NULL || (*stack)->next == NULL)
+	int rem, i = buff_size - 1;
+
+	buff[buff_size] = '\0';
+	while (i >= 0)
 	{
-		printf("L%d: can't mod, stack too short\n", line_number);
-		error_exit(stack);
+		rem = num % base;
+		if (rem > 9) /* return lowercase ascii val representation */
+			buff[i] = rem + 87; /* 10 will be a, 11 = b, ... */
+		else
+			buff[i] = rem + '0';
+		num /= base;
+		i--;
 	}
-	if ((*stack)->n == 0)
-	{
-		printf("L%d: division by zero\n", line_number);
-		error_exit(stack);
-	}
-	(*stack)->next->n %= (*stack)->n;
-	_pop(stack, line_number);
 }

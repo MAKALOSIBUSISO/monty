@@ -1,22 +1,26 @@
 #include "monty.h"
-int sq_flag = 0;
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+char **op_toks = NULL;
 /**
- * main - drivers function for monty programs
+ * main - driveris function for monty programs
  * @ac: int num of arguments
  * @av: opcode file
- * Return: 0
+ * Return: exit_failre on error or exit_success on success
  */
-int main(int ac, char **av)
+int main(int argc, char **argv)
 {
-	stack_t *stack;
+	FILE *script_fd = NULL;
+	int exit_code = EXIT_SUCCESS;
 
-	stack = NULL;
-	if (ac != 2)
-	{
-		printf("USAGE: monty file\n");
-		error_exit(&stack);
-	}
-	read_file(av[1], &stack);
-	free_dlistint(stack);
-	return (0);
+	if (argc != 2)
+		return (usage_error());
+	script_fd = fopen(argv[1], "r");
+	if (script_fd == NULL)
+		return (f_open_error(argv[1]));
+	exit_code = run_monty(script_fd);
+	fclose(script_fd);
+	return (exit_code);
 }
