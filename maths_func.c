@@ -1,97 +1,144 @@
-#include <stdlib.h>
+#include "monty.h"
 
-char *get_int(int num);
-unsigned int _abs(int);
-int get_numbase_len(unsigned int num, unsigned int base);
-void fill_numbase_buff(unsigned int num, unsigned int base,
-		       char *buff, int buff_size);
-
-/**
- * get_int - gets a character pointer to new string containing int
- * @num: number to convert to string
- *
- * Return: character pointer to newly created string. NULL if malloc fails.
- */
-
-char *get_int(int num)
-{
-	unsigned int temp;
-	int length = 0;
-	long num_l = 0;
-	char *ret;
-
-	temp = _abs(num);
-	length = get_numbase_len(temp, 10);
-
-	if (num < 0 || num_l < 0)
-		length++; /* negative sign */
-	ret = malloc(length + 1); /* create new string */
-	if (!ret)
-		return (NULL);
-
-	fill_numbase_buff(temp, 10, ret, length);
-	if (num < 0 || num_l < 0)
-		ret[0] = '-';
-
-	return (ret);
-}
+void monty_push(stack_t **stack, unsigned int line_number);
+void monty_pall(stack_t **stack, unsigned int line_number);
+void monty_pint(stack_t **stack, unsigned int line_number);
+void monty_pop(stack_t **stack, unsigned int line_number);
+void monty_swap(stack_t **stack, unsigned int line_number);
 
 /**
- * _abs - gets the absolute value of an integer
- * @i: integer to get absolute value of
- *
- * Return: unsigned integer abs rep of i
+ * monty_push - Pushes a value to a stack_t linked list.
+ * @stack: A pointer to the top mode node of a stack_t linked list.
+ * @line_number: The current working line number of a Monty bytecodes file.
  */
 
-unsigned int _abs(int i)
+void monty_push(stack_t **stack, unsigned int line_number)
 {
-	if (i < 0)
-		return (-(unsigned int)i);
-	return ((unsigned int)i);
-}
+	stack_t *tmp, *new;
+	int i;
 
-/**
- * get_numbase_len - gets length of buffer needed for an unsigned int
- * @num: number to get length needed for
- * @base: base of number representation used by buffer
- *
- * Return: integer containing length of buffer needed (doesn't contain null bt)
- */
-int get_numbase_len(unsigned int num, unsigned int base)
-{
-	int len = 1; /* all numbers contain atleast one digit */
-
-	while (num > base - 1)
+	new = malloc(sizeof(stack_t));
+	if (new == NULL)
 	{
-		len++;
-		num /= base;
+		set_op_tok_error(malloc_error());
+		return;
 	}
-	return (len);
+
+	if (op_toks[1] == NULL)
+	{
+		set_op_tok_error(no_int_error(line_number));
+		return;
+	}
+
+	for (i = 0; op_toks[1][i]; i++)
+	{
+		if (op_toks[1][i] == '-' && i == 0)
+			continue;
+		if (op_toks[1][i] < '0' || op_toks[1][i] > '9')
+		{
+			set_op_tok_error(no_int_error(line_number));
+			return;
+		}
+	}
+	new->n = atoi(op_toks[1]);
+
+	if (check_mode(*stack) == STACK) /* STACK mode insert at front */
+	{
+		tmp = (*stack)->next;
+		new->prev = *stack;
+		new->next = tmp;
+		if (tmp)
+			tmp->prev = new;
+		(*stack)->next = new;
+	}
+	else /* QUEUE mode insert at end */
+	{
+		tmp = *stack;
+		while (tmp->next)
+			tmp = tmp->next;
+		new->prev = tmp;
+		new->next = NULL;
+		tmp->next = new;
+	}
 }
 
 /**
- * fill_numbase_buff - fills buffer with correct numbers up to base 36
- * @num: number to convert to string given base
- * @base: base of number used in conversion, only works up to base 36
- * @buff: buffer to fill with result of conversion
- * @buff_size: size of buffer in bytes
- *
- * Return: always void.
+ * monty_pall - Prints the values of a stack_t linked list.
+ * @stack: A pointer to the top mode node of a stack_t linked list.
+ * @line_number: The current working line number of a Monty bytecodes file.
  */
-void fill_numbase_buff(unsigned int num, unsigned int base,
-			char *buff, int buff_size)
+void monty_pall(stack_t **stack, unsigned int line_number)
 {
-	int rem, i = buff_size - 1;
+	stack_t *tmp = (*stack)->next;
 
-	buff[buff_size] = '\0';
-	while (i >= 0)
+	while (tmp)
 	{
-		rem = num % base;
-		if (rem > 9) /* return lowercase ascii val representation */
-			buff[i] = rem + 87; /* 10 will be a, 11 = b, ... */
-		else
-			buff[i] = rem + '0';
-		num /= base;
-		i--;
+		printf("%d\n", tmp->n);
+		tmp = tmp->next;
 	}
+	(void)line_number;
+}
+
+/**
+ * monty_pint - Prints the top value of a stack_t linked list.
+ * @stack: A pointer to the top mode node of a stack_t linked list.
+ * @line_number: The current working line number of a Monty bytecodes file.
+ */
+void monty_pint(stack_t **stack, unsigned int line_number)
+{
+	if ((*stack)->next == NULL)
+	{
+		set_op_tok_error(pint_error(line_number));
+		return;
+	}
+
+	printf("%d\n", (*stack)->next->n);
+}
+
+
+/**
+ * monty_pop - Removes the top value element of a stack_t linked list.
+ * @stack: A pointer to the top mode node of a stack_t linked list.
+ * @line_number: The current working line number of a Monty bytecodes file.
+ */
+void monty_pop(stack_t **stack, unsigned int line_number)
+{
+	stack_t *next = NULL;
+
+	if ((*stack)->next == NULL)
+	{
+		set_op_tok_error(pop_error(line_number));
+		return;
+	}
+
+	next = (*stack)->next->next;
+	free((*stack)->next);
+	if (next)
+		next->prev = *stack;
+	(*stack)->next = next;
+}
+
+/**
+ * monty_swap - Swaps the top two value elements of a stack_t linked list.
+ * @stack: A pointer to the top mode node of a stack_t linked list.
+ * @line_number: The current working line number of a Monty bytecodes file.
+ */
+void monty_swap(stack_t **stack, unsigned int line_number)
+{
+	stack_t *tmp;
+
+	if ((*stack)->next == NULL || (*stack)->next->next == NULL)
+	{
+		set_op_tok_error(short_stack_error(line_number, "swap"));
+		return;
+	}
+
+	tmp = (*stack)->next->next;
+	(*stack)->next->next = tmp->next;
+	(*stack)->next->prev = tmp;
+	if (tmp->next)
+		tmp->next->prev = (*stack)->next;
+	tmp->next = (*stack)->next;
+	tmp->prev = *stack;
+	(*stack)->next = tmp;
 }
