@@ -1,8 +1,8 @@
 #include "monty.h"
 int sq_flag = 0;
 /**
- * main - Function for monty program
- * @ac: The int number of the argument
+ * main - drivers function for monty programs
+ * @ac: int num of arguments
  * @av: opcode file
  * Return: 0
  */
